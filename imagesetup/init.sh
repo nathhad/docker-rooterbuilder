@@ -10,32 +10,36 @@ if [ ! -f /build/autobuild/setupcomplete ] ; then
 
 	cd /build/rooter/
 	echo "Cloning fresh rooter image."
-	git clone https://github.com/ofmodemsandmen/RooterSource rooter19076
+	git clone --depth 1 --branch main --single-branch https://github.com/ofmodemsandmen/RooterSource rooter19076
 	echo "Update build packages."
-	cd /build/rooter/19076/
+	cd /build/rooter/rooter19076/
 	mkdir -p ./images
 
 	# Download autobuild:
 	echo "Downloading autobuild."
-	cd /build/autobuild/
-	git clone https://github.com/nathhad/autobuilder
+	cd /build/autobuild
+	git clone --depth 1 --branch main --single-branch https://github.com/nathhad/autobuilder /build/autobuild
 
 	# Copy the container autobuild conf template in.
 	cp /build/init/autobuild19.conf /build/autobuild/autobuild19.conf
+	echo "autobuild.conf copied in from template."
+
+	# Create the autobuild output directory.
+	mkdir /build/autobuild/output
+	echo "Autobuild ouput directory created."
 
 	# Place the marker file to skip this in the future.
 	touch /build/autobuild/setupcomplete
+	echo "First run setup complete."
 fi
 
 # Create the symlink to correct autobuild directory
 ln -s /build/autobuild /serve/rooter/autobuild
+echo "Autobuild directory symlink created."
+echo "System ready to go."
 
-# Set up Cron
-echo "*/1 * * * * /bin/bash /build/abmanage/abtrigger" > /etc/cron.d/autobuild.crontab
-chmod 644 /etc/cron.d/autobuild.crontab
-crontab /etc/cron.d/autobuild.crontab
-cron -L 0
+# Launch abtrigger.docker trigger loop.
+export FORCE_UNSAFE_CONFIGURE=1
+exec /bin/bash /build/autobuild/abtrigger.docker
 
-# Launch a bash process and wait
-exec /bin/bash
 
