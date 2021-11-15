@@ -1,4 +1,4 @@
-##### ROOter Builder 19.07.6 (Docker)
+### ROOter Builder 19.07.6 (Docker)
 
 This is a containerized build environment for ROOter GoldenOrb based on
 OpenWRT release 19.07.6. At the time of this writing, this is the
@@ -73,4 +73,135 @@ git clone --depth 1 --branch main --single-branch https://github.com/nathhad/doc
 The minimum recommended component for this quick startup is the quick start script, which you can
 [download here](https://github.com/nathhad/docker-rooter19076/raw/main/simple-up.sh).
 
+4. **Start the container**
 
+The first time you start the container, it will pull both the build environment and the autobuild
+wrapper setup down off of github. This will take several minutes at a minimum, so you will need
+to wait for that step to complete first. To first start the container, cd to the folder where
+you downloaded the startup script in step 3, and run:
+
+```
+. simple-startup.sh
+```
+
+To know when initial container setup is complete, you'll need to watch the output of the container
+using docker logs. Execute this command:
+
+```
+docker logs -f r19build
+```
+
+Wait for a line that reads `System ready to go.` You can then `Ctrl-C` out of watching the log.
+
+Once you run the image the first time, and it initializes the environment in your storage
+volumes, the container will skip that step in the future, and startup of the container will
+only take a few seconds.
+
+If for some reason you want to clear your container and start over, you can run wipeimage.sh, which
+is included in the git. This will wipe both the build environment and autobuild settings container.
+This is not recommended as a frequent practice unless recovering from something quite wrong -
+wiping the autobuild volume will remove any tuning settings, and wiping the build volume will
+wipe out any custom image definitions you have created. However, other than losing these bits
+of information, no other harm will come of wiping the storage; the container will simply
+re-download the build and autobuild environments when you next start it, and start fresh.
+
+5. **Building Images**
+
+Most autobuild commands can be issued from inside or outside of the container. Building custom
+images must be done from the command line inside the container, because it requires a fair
+bit of interactive input. For this quick start guide, we will assume you will do all work
+from inside. Step into your running image with the following command:
+
+```
+docker exec -it r19build /bin/bash
+```
+
+Your command terminal will change to show you inside the container now. Example:
+
+```
+chuck@felix:~/$ docker exec -it r19build /bin/bash
+root@2c22c3f20b77:/#
+```
+
+The characters after `root@` will be different for your machine; this is the ID number
+of your container, and will change any time you create a new container (for example,
+by updating to a newer image, covered in a later step). For the rest of this quick
+start, I will show that "inside the image" prompt for any commands meant to be run
+from within your container.
+
+You may exit the container at any time with the usual `exit` command. This will not
+stop the container from running, merely log you out of it.
+
+*Autobuild Wrapper System*
+
+The Autobuild wrapper system is used for rapidly building stock images and keeping your
+build environment up to date. While many Autobuild commands can be issued from outside
+the container, for now, plan to be at a command line inside the container to get started.
+
+Your main interface with the autobuild system is the abmanage script, which does include
+basic helpfile output:
+
+```
+root@2c22c3f20b77:~# abmanage help
+```
+
+Use is best illustrated with several examples.
+
+Update the build system catalog, and show all new routers (any router which doesn't
+already have an existing image in the /build/output folder):
+
+```
+\root@2c22c3f20b77:~# abmanage -p new
+```
+
+You can print the status of the entire catalog. It's long, so you will need to format
+the output to make it readable. If you are on a large terminal (160x50 or bigger) you
+can get beautiful output by piping to column. Example, without an update:
+
+```
+root@2c22c3f20b77:~# abmanage status | column
+```
+
+For smaller terminals that won't fit multiple columns, example with update:
+
+```
+root@2c22c3f20b77:~# abmanage -p status | less
+```
+
+Print a list of all new routers (routers which are in the catalog but have no images
+in the /build/output folder):
+
+```
+root@2c22c3f20b77:~# abmanage new
+```
+
+Update the build catalog, print a list of all new routers, and build all new routers
+if there are any (using the `-e` flag):
+
+```
+root@2c22c3f20b77:~# abmanage -pe new
+```
+
+List all routers in current copy of catalog *with an image* where the newest image is over 5 days old:
+
+```
+root@2c22c3f20b77:~# abmanage stale 5
+```
+
+Update, and build a fresh copy of every router *with an existing image*:
+
+```
+root@2c22c3f20b77:~# abmanage -pe stale 0
+```
+
+At the moment, there is no `all` command as I have not needed it, but I do plan
+to add one in the future. An equivalent to a "build all" directive can be
+accomplished right now by following `abmanage -pe new` with `abmanage -e stale 0`
+to run a fresh image of every router in the catalog.
+
+There are two currently supported cleanup commands. `prune <integer>` will find
+every router with more than `<integer>` completed images, and move any extras
+above that number to the trash folder. `stray` will move any images not in
+the current catalog to the trash folder; please be aware that stray will also
+sweep up custom images. The trash folder is /build/output/trash, and this folder
+currently requires manual cleanup.
