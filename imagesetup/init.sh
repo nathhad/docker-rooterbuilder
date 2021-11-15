@@ -4,6 +4,8 @@
 # If the image is fresh, the script will install
 # the autobuild system and the build environment.
 
+echo "Starting container."
+
 if [ ! -f /build/autobuild/setupcomplete ] ; then
 	# This is a fresh image.
 	# Download rooter:
@@ -21,8 +23,8 @@ if [ ! -f /build/autobuild/setupcomplete ] ; then
 	git clone --depth 1 --branch main --single-branch https://github.com/nathhad/autobuilder /build/autobuild
 
 	# Copy the container autobuild conf template in.
-	cp /build/init/autobuild19.conf /build/autobuild/autobuild19.conf
-	echo "autobuild.conf copied in from template."
+	cp /build/init/autobuild19.conf /build/autobuild/autobuild19.local.conf
+	echo "autobuild.local.conf copied in from template."
 
 	# Create the autobuild output directory.
 	mkdir /build/autobuild/output
@@ -34,8 +36,21 @@ if [ ! -f /build/autobuild/setupcomplete ] ; then
 fi
 
 # Create the symlink to correct autobuild directory
-ln -s /build/autobuild /serve/rooter/autobuild
-echo "Autobuild directory symlink created."
+if [ ! -L /serve/rooter/autobuild ] ; then
+	ln -s /build/autobuild /serve/rooter/autobuild
+	echo "Autobuild directory symlink created."
+fi
+
+# Create autobuild19.conf symlink
+if [ ! -d ~/.config ] ; then
+	mkdir ~/.config
+	echo "Directory ~/.config created."
+fi
+if [ ! -L ~/.config/autobuild19 ] ; then
+	ln -s /build/autobuild ~/.config/autobuild19
+	echo "Config path link created."
+fi
+
 echo "System ready to go."
 
 # Launch abtrigger.docker trigger loop.
