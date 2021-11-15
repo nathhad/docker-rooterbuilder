@@ -1,4 +1,4 @@
-### ROOter Builder 19.07.6 (Docker)
+# ROOter Builder 19.07.6 (Docker)
 
 This is a containerized build environment for ROOter GoldenOrb based on
 OpenWRT release 19.07.6. At the time of this writing, this is the
@@ -20,7 +20,7 @@ custom image abilities supported by the ROOter build environment.
 - [ROOter 19.07.6 build system instructions](http://www.aturnofthenut.com/builds/buildocs.pdf)
 - [Autobuild System](https://github.com/nathhad/autobuilder)
 
-## Quick Setup
+## Getting Started (Quick Setup)
 
 These steps will get you going using the basic, default settings.
 
@@ -107,6 +107,8 @@ re-download the build and autobuild environments when you next start it, and sta
 
 5. **Building Images**
 
+At this point setup is complete, and you are ready to build images.
+
 Most autobuild commands can be issued from inside or outside of the container. Building custom
 images must be done from the command line inside the container, because it requires a fair
 bit of interactive input. For this quick start guide, we will assume you will do all work
@@ -120,7 +122,7 @@ Your command terminal will change to show you inside the container now. Example:
 
 ```
 chuck@felix:~/$ docker exec -it r19build /bin/bash
-root@2c22c3f20b77:/#
+root@2c22c3f20b77:~#
 ```
 
 The characters after `root@` will be different for your machine; this is the ID number
@@ -132,7 +134,7 @@ from within your container.
 You may exit the container at any time with the usual `exit` command. This will not
 stop the container from running, merely log you out of it.
 
-*Autobuild Wrapper System*
+## Autobuild Wrapper System
 
 The Autobuild wrapper system is used for rapidly building stock images and keeping your
 build environment up to date. While many Autobuild commands can be issued from outside
@@ -151,7 +153,7 @@ Update the build system catalog, and show all new routers (any router which does
 already have an existing image in the /build/output folder):
 
 ```
-\root@2c22c3f20b77:~# abmanage -p new
+root@2c22c3f20b77:~# abmanage -p new
 ```
 
 You can print the status of the entire catalog. It's long, so you will need to format
@@ -205,3 +207,54 @@ above that number to the trash folder. `stray` will move any images not in
 the current catalog to the trash folder; please be aware that stray will also
 sweep up custom images. The trash folder is /build/output/trash, and this folder
 currently requires manual cleanup.
+
+## Building Custom Images
+
+Building custom images works exactly as described in the
+[ROOter 19.07.6 build system instructions](http://www.aturnofthenut.com/builds/buildocs.pdf).
+Running in a container doesn't change anything about this process by default, except
+for the root file location of the build system, which will be at
+/build/rooter/rooter19076. Once your container is running, simply step into
+the container as explained above, then navigate to the right folder:
+
+```
+root@2c22c3f20b77:~# cd /build/rooter/rooter19076
+```
+
+From there, open the build system instructions above, and skip
+straight past all of the setup instructions to the heading
+which reads **Creating Custom Images**.
+
+Once you have built a custom image, you will need to move it manually
+to the right folder to get it out of your container. The custom build
+script will leave its output in a subfolder of the build system.
+You will need to move it to the normal output folder with the
+following command:
+
+```
+root@2c22c3f20b77:~# mv /build/rooter/rooter19076/images/*.zip /build/output/
+```
+
+## Accessing your images
+
+Once you have built what you need, you just need to get it out of the
+container. Luckily Docker makes this fairly straightforward, as the contents
+of those storage volumes are directly accessible from outside the container,
+too.
+
+The following examples assume the Docker root is still at the default
+location, `/var/lib/docker`. If you moved your docker file system to
+another partition like I recommended way up before we even started Step 1,
+you'll need to substitute the correct root path.
+
+The contents of your /build/output storage directory will be directly
+accessible here:
+
+```
+/var/lib/docker/volumes/r19_output/_data
+```
+
+You can copy them straight out, though you'll usually need root privileges
+to do so, as Docker runs as root by default.
+
+
