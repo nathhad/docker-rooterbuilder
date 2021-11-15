@@ -55,7 +55,7 @@ Those three will hold your configuration files, your actual build environment, a
 
 2. **Download and install the image**
 
-```
+```shell
 docker pull nathhad/rooter19076:latest
 ```
 
@@ -66,7 +66,7 @@ you download at least part.
 
 The easy way, the whole thing (you can change the last bit to change the destination of the download):
 
-```
+```bash
 git clone --depth 1 --branch main --single-branch https://github.com/nathhad/docker-rooter19076 ~/docker-rooter19076
 ```
 
