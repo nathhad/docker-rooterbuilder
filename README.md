@@ -20,7 +20,7 @@ custom image abilities supported by the ROOter build environment.
 - [ROOter 19.07.6 build system instructions](http://www.aturnofthenut.com/builds/buildocs.pdf)
 - [Autobuild System](https://github.com/nathhad/autobuilder)
 
-## Getting Started (Quick Setup)
+# Getting Started (Quick Setup)
 
 These steps will get you going using the basic, default settings.
 
@@ -80,14 +80,14 @@ wrapper setup down off of github. This will take several minutes at a minimum, s
 to wait for that step to complete first. To first start the container, cd to the folder where
 you downloaded the startup script in step 3, and run:
 
-```
+```bash
 . simple-startup.sh
 ```
 
 To know when initial container setup is complete, you'll need to watch the output of the container
 using docker logs. Execute this command:
 
-```
+```bash
 docker logs -f r19build
 ```
 
@@ -114,13 +114,13 @@ images must be done from the command line inside the container, because it requi
 bit of interactive input. For this quick start guide, we will assume you will do all work
 from inside. Step into your running image with the following command:
 
-```
+```bash
 docker exec -it r19build /bin/bash
 ```
 
 Your command terminal will change to show you inside the container now. Example:
 
-```
+```bash
 chuck@felix:~/$ docker exec -it r19build /bin/bash
 root@2c22c3f20b77:~#
 ```
@@ -143,7 +143,7 @@ the container, for now, plan to be at a command line inside the container to get
 Your main interface with the autobuild system is the abmanage script, which does include
 basic helpfile output:
 
-```
+```bash
 root@2c22c3f20b77:~# abmanage help
 ```
 
@@ -152,7 +152,7 @@ Use is best illustrated with several examples.
 Update the build system catalog, and show all new routers (any router which doesn't
 already have an existing image in the /build/output folder):
 
-```
+```bash
 root@2c22c3f20b77:~# abmanage -p new
 ```
 
@@ -160,39 +160,39 @@ You can print the status of the entire catalog. It's long, so you will need to f
 the output to make it readable. If you are on a large terminal (160x50 or bigger) you
 can get beautiful output by piping to column. Example, without an update:
 
-```
+```bash
 root@2c22c3f20b77:~# abmanage status | column
 ```
 
 For smaller terminals that won't fit multiple columns, example with update:
 
-```
+```bash
 root@2c22c3f20b77:~# abmanage -p status | less
 ```
 
 Print a list of all new routers (routers which are in the catalog but have no images
 in the /build/output folder):
 
-```
+```bash
 root@2c22c3f20b77:~# abmanage new
 ```
 
 Update the build catalog, print a list of all new routers, and build all new routers
 if there are any (using the `-e` flag):
 
-```
+```bash
 root@2c22c3f20b77:~# abmanage -pe new
 ```
 
 List all routers in current copy of catalog *with an image* where the newest image is over 5 days old:
 
-```
+```bash
 root@2c22c3f20b77:~# abmanage stale 5
 ```
 
 Update, and build a fresh copy of every router *with an existing image*:
 
-```
+```bash
 root@2c22c3f20b77:~# abmanage -pe stale 0
 ```
 
@@ -208,6 +208,66 @@ the current catalog to the trash folder; please be aware that stray will also
 sweep up custom images. The trash folder is /build/output/trash, and this folder
 currently requires manual cleanup.
 
+## Triggering Autobuilds By Name
+
+If you need the server to build stock autobuild images of specific router models,
+that is also easy to command, by sending the list of routers you want directly to the
+autobuild system's *trigger file*. This is also how abmanage starts builds with the
+`-e` flag. In this Docker image, the autobuild system's trigger file is located
+at `/tmp/go` in temporary storage. Once the trigger system has picked up your
+command (it will check every 60 seconds), it will remove the trigger file.
+
+For example:
+
+```bash
+root@2c22c3f20b77:/# echo "ALIX-2D13 APU2C4 AR150 AR300LITE AR750 AR750S" >> /tmp/go
+```
+
+will queue up six routers for immediate build in the queue, which will start in a
+minute or less.
+
+The router names may be separated interchangeably by spaces or line feeds. That means
+if you sent some routers to the trigger, and immediately realized you forgot a few,
+you can immediately append them to the trigger file the same way. For example, the
+following is exactly equivalent to the block above:
+
+```bash
+root@2c22c3f20b77:/# echo "ALIX-2D13 APU2C4 AR150 AR300LITE" >> /tmp/go
+root@2c22c3f20b77:/# echo "AR750 AR750S" >> /tmp/go
+```
+
+As long as you get them appended before the trigger system catches it, all of the
+routers will be included in the batch that will be started.
+
+The only thing to be careful of: make *certain* you always *append* to your
+trigger file using `>>` rather than overwriting using `>`.
+
+*What if you're too slow, and the system triggers before you add your second batch?*
+That's okay too. The trigger system will have cleared the first batch from the file
+when it started that batch running, and you can keep adding more routers manually
+to the trigger file using `>>` while it runs. The system will wait to check the
+trigger again until the current build set is complete. Afterward, it will spot
+your new additions again within a minute, and start another batch.
+
+*What if you want some time to prepare your manual list first?* That's easy, too.
+Just start your list in a temporary file - nano is installed inside the image
+for this use, and for system tuning. You can take your time putting your list
+together. When you're done, you can just save and move that file to the trigger file
+location. If your temporary list was /tmp/mylist, just execute:
+
+```bash
+root@2c22c3f20b77:/# mv /tmp/mylist /tmp/go
+```
+
+If your use case has you re-running the same manual list of routers over and over,
+you can save your list to /build/autobuild/mylist instead (as the autobuild folder
+is persistent, and the tmp folder is not), and just copy the list to the trigger
+whenever you need to start a build:
+
+```bash
+root@2c22c3f20b77:/# cp /build/autobuild/mylist /tmp/go
+```
+
 ## Building Custom Images
 
 Building custom images works exactly as described in the
@@ -217,7 +277,7 @@ for the root file location of the build system, which will be at
 /build/rooter/rooter19076. Once your container is running, simply step into
 the container as explained above, then navigate to the right folder:
 
-```
+```bash
 root@2c22c3f20b77:~# cd /build/rooter/rooter19076
 ```
 
@@ -231,7 +291,7 @@ script will leave its output in a subfolder of the build system.
 You will need to move it to the normal output folder with the
 following command:
 
-```
+```bash
 root@2c22c3f20b77:~# mv /build/rooter/rooter19076/images/*.zip /build/output/
 ```
 
@@ -250,10 +310,41 @@ you'll need to substitute the correct root path.
 The contents of your /build/output storage directory will be directly
 accessible here:
 
-```
+```bash
 /var/lib/docker/volumes/r19_output/_data
 ```
 
 You can copy them straight out, though you'll usually need root privileges
 to do so, as Docker runs as root by default.
 
+# Maintenance and Tuning
+
+## Stopping, Starting, and Restarting
+
+Your container can be stopped, started, and restarted at your convenience,
+and will of course be stopped if the computer is rebooted. This container
+is not set to automatically restart by default, and must be manually
+started after a reboot, though that can be trivially changed if you
+desire (as described in plenty of other Docker guides and info).
+
+To stop your container:
+
+```bash
+docker stop r19build
+```
+
+Most importantly, your container *does not need to be re-created*
+in order to restart it. Simply start it with:
+
+```bash
+docker start r19build
+```
+
+## Updating the Container Image
+
+Updating the build environment itself is handled from within using
+`abmanage -p status` (or any other command that supports the -p flag).
+
+Updating the autobuild wrapper: not yet ready, more to come.
+
+Updating the build container's image: not yet ready, more to come.
