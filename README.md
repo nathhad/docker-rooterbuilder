@@ -45,7 +45,7 @@ Your storage volumes are the only persistent part of the image, the program part
 clean every time you restart the container (reboot, etc). You need to create the volumes you will
 use for the container.
 
-```
+```bash
 docker volume create r19_autobuild
 docker volume create r19_build
 docker volume create r19_output
@@ -256,5 +256,4 @@ accessible here:
 
 You can copy them straight out, though you'll usually need root privileges
 to do so, as Docker runs as root by default.
-
 
