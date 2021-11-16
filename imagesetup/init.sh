@@ -42,12 +42,12 @@ if [ ! -L /serve/rooter/autobuild ] ; then
 fi
 
 # Create autobuild19.conf symlink
-if [ ! -d ~/.config ] ; then
-	mkdir ~/.config
+if [ ! -d /root/.config ] ; then
+	mkdir /root/.config
 	echo "Directory ~/.config created."
 fi
-if [ ! -L ~/.config/autobuild19 ] ; then
-	ln -s /build/autobuild ~/.config/autobuild19
+if [ ! -L /root/.config/autobuild19 ] || [ ! -d /root/.config/autobuild19 ] ; then
+	ln -s /build/autobuild /root/.config/autobuild19
 	echo "Config path link created."
 fi
 

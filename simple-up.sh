@@ -8,4 +8,4 @@ docker run -dit \
 --mount src=r19_build,dst=/build/rooter \
 --mount src=r19_output,dst=/build/output \
 --mount type=tmpfs,dst=/tmp/ \
-rooter19076:latest
+nathhad/rooter19076:latest
