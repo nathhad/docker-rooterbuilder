@@ -342,9 +342,128 @@ docker start r19build
 
 ## Updating the Container Image
 
-Updating the build environment itself is handled from within using
+**Updating the build environment** itself is handled from within using
 `abmanage -p status` (or any other command that supports the -p flag).
 
-Updating the autobuild wrapper: not yet ready, more to come.
+**Updating the autobuild wrapper:** step into the container, and cd to
+/build/autobuild/. Execute `git pull` here, and as long as you have
+not modified any of the original autobuild files, any updates to
+the autobuild wrapper system will be pulled down and incorporated
+automatically. (This is why you should put any configuration
+changes in autobuild19.local.conf, as changing autobuild19.conf
+directly will block the git update.)
 
-Updating the build container's image: not yet ready, more to come.
+**Updating the build container's image:** this is actually the easiest
+update. All of the working programs in the container are a static
+image, and containers themselves are disposable (because all your
+actual data, including the ROOter build system files and the
+autobuild wrapper files,  is stored in the persistent volumes). To update the
+container's software, you simply stop the container, remove it,
+pull a newer copy of the container image (Docker will only pull
+updates, not a full fresh copy), and start a new container.
+
+```bash
+docker stop r19build
+docker rm r19build
+docker pull nathhad/rooter19076:latest
+./simple-up.sh
+```
+
+With that, you have a new container with all of the most current
+software updates, and your fresh container will pick right back
+up where the old one left off in your build environment.
+
+## Performance Tuning - Autobuilds
+
+The autobuild wrapper already builds a good bit of performance tuning
+into the build process when creating a stock image. The main tuning
+adjustment to make is thread count. Image builds can benefit substantially
+from parallel processing. The default autobuild configuration is for
+two parallel threads; however, most relatively new build machines
+(really, anything first generation Intel Core i5 or i7 or newer, or
+equivalent) is almost certainly going to benefit from turning up the
+thread count.
+
+To adjust the thread count, edit the file `/build/autobuild/autobuild19.local.conf`
+with nano. Near the bottom, look for the line that reads:
+
+```bash
+MAKEFLAGS='-j2'
+```
+
+That makeflag will control the number of parallel threads run in the parts of
+the build that can be run parallel. A good place to start with most systems
+is at your number of processor cores (real cores, not virtual cores provided
+by hyperthreading) plus 1. Ultimately your final system tuning will be via
+trial and error.
+
+Make your adjustment, start a build, and open htop (on your host machine, not
+in the container). In the top right, you will see three numbers after the
+label Load Average; they represent the average over the past one, five,
+and fifteen minutes. You want to primarily watch the first number when the
+system is working hard. Your target number should be your number of cores
+if you have a non-hyperthreading processor, or roughly 1.3 times your
+number of cores on a hyperthreading processor.
+
+You do not need to worry about overloading your processor in a way that
+interferes with other services running on your host computer. The autobuild
+wrapper automatically deprioritizes all of the threads run as part of the
+build process, so if another process needs the CPU resources, the build threads
+will automatically get held back long enough to get the more critical work done.
+
+The only think you need to keep an eye on is your system temperatures. If your
+cooling system isn't up to the task and you don't routinely use your machine
+hard, tuning the autobuild system to max out your processor for 30 hours
+straight is a very effective way to find out. (That's also true if testing
+your cooling system is actually the goal, except unlike a lot of test
+suites, this way gets actual work done and shows you the performance under
+a real workload.)
+
+## Performance Tuning - Custom Builds
+
+Because the custom build system doesn't use the autobuild wrapper, the performance
+tuning (deprioritizing the build, then making it run multiple threads) is not
+automatically included. Luckily you can turn on these features manually.
+
+Please refer back to the rooter custom build instructions document when reading
+this section. We will be working with the following example build command
+directly from the build instructions:
+
+```bash
+./build archerc7v5 -eb custom-c7v5
+```
+
+First, to deprioritize this command and everything else it runs by five
+priority points, we run the command through `nice`.
+
+```bash
+nice -n 5 ./build archerc7v5 -eb custom-c7v5
+```
+
+This does the *exact* same thing as the first command, just with the process
+and all of its children deprioritized. Now we can safely run more threads.
+To do that without modifying anything in the build script, we need to manually
+pass an environment variable to make when we start the build, this way:
+
+```bash
+MAKEFLAGS='-j3' nice -n 5 ./build archerc7v5 -eb custom-c7v5
+```
+
+The above version of the command will run the build deprioritized, with up to
+three threads at once - and is exactly how the autobuild wrapper calls the
+build script when doing automated builds.
+
+# To Do: Upcoming Features
+
+The containerized version of the autobuild system is still a work in progress.
+The following work or new features are all either in the works, or planned as
+soon as I can get to them.
+
+- More documentation: This README is really all there is so far. Documentation
+is sadly lacking. I do aim to rectify this as quickly as possible.
+
+- Fixed logging: The autobuild wrapper system has great logging when run on
+bare metal, but it's not working in the container system yet. I have some
+learning to do to fix that one.
+
+- Improved control from outside the container: w.i.p.
