@@ -453,17 +453,45 @@ The above version of the command will run the build deprioritized, with up to
 three threads at once - and is exactly how the autobuild wrapper calls the
 build script when doing automated builds.
 
+## Monitoring Progress and Diagnosing Errors
+
+When using the autobuild wrapper in the Docker container, output has been redirected
+to the docker log. Batch builds can be monitored from outside the container using
+the command
+
+```bash
+docker logs -f r19build
+```
+
+This data for each build is also redirected into a file in /build/autobuild/output
+named NUM.build.txt where NUM is a sequence tracking number for this individual
+build system.
+
+The orginary (and very log) output from the OpenWRT build process is redirected
+into the file /build/autobuild/output/buildout19.txt and may be followed from
+*inside* the container using `tail -f /build/autobuild/output/buildout19.txt`.
+Similarly, standard error from the build process is redirected into
+builderr19.txt in the same location.
+
+If a model fails to build, the last 10 lines each from buildout19.txt and
+builderr19.txt will be saved to a file named NUM.ROUTERMODEL.err.txt for use
+in diagnosis. The wrapper will then run `make clean` to clear the build environment,
+and retry the build of that model router. This will generally take noticeably
+longer than the first build, but will solve build errors often enough to be
+worth the automatic rerun. If the second build fails, a second NUM.ROUTERMODEL.rberr.txt
+with the end of the rebuild process will be saved, and the wrapper will move on
+to the next router model in the queue.
+
 # To Do: Upcoming Features
 
 The containerized version of the autobuild system is still a work in progress.
 The following work or new features are all either in the works, or planned as
 soon as I can get to them.
 
+- Run the processes inside the container as a non-privileged user. Currently
+the build process runs as root, which is, needless to say, less than ideal.
+
 - More documentation: This README is really all there is so far. Documentation
 is sadly lacking. I do aim to rectify this as quickly as possible.
-
-- Fixed logging: The autobuild wrapper system has great logging when run on
-bare metal, but it's not working in the container system yet. I have some
-learning to do to fix that one.
 
 - Improved control from outside the container: w.i.p.
