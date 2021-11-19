@@ -1,11 +1,8 @@
-FROM nathhad/rooterbase:11.1.02
+FROM nathhad/rooterbase:11.1.03
 LABEL maintainer="Chuck Sanders <nathhad@gmail.com>"
-LABEL version="11.1.02.i"
+LABEL version="11.1.03.a"
 
-RUN apt-get update && \
-	apt-get install nano && \
-	apt-get clean && \
-	mkdir /build/init && \
+RUN mkdir /build/init && \
 	mkdir /serve/ && \
 	mkdir /serve/rooter && \
 	mkdir /root/.config && \
