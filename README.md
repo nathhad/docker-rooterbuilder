@@ -1,4 +1,4 @@
-# ROOter Builder 19.07.6 (Docker)
+# ROOter Builder (Docker)
 
 This is a containerized build environment for ROOter GoldenOrb based on
 OpenWRT release 19.07.6. At the time of this writing, this is the
@@ -9,6 +9,19 @@ wrapper script system. It is meant to be a main building block to
 construct and deploy ROOter autobuild servers, but also provides
 full support for building custom images, including all of the usual
 custom image abilities supported by the ROOter build environment.
+
+## Versions/Branches
+
+This git covers building different ROOter build environments in different branches:
+
+- **main**: 19.07.6 (the primary ROOter build environment)
+- **18067**: 18.06.7 (supports several older routers)
+
+At this time the 18067 build environment is in testing.
+
+The instructions here are primarily for 19.07.6; some file names may
+change for the other build branches, but an effort has been made to
+point the changes out when possible.
 
 ## Relevant Links:
 
@@ -53,10 +66,29 @@ docker volume create r19_output
 
 Those three will hold your configuration files, your actual build environment, and the resulting output images.
 
+All versions of the build environment share the same output volume (which simplifies setting up a 
+shared autobuild server). However, the autobuild and build folders will need to be renamed
+accordingly for different build environment versions. The simple-up.sh expects the following
+file names for other build environments:
+
+**18.06.7**
+
+```bash
+docker volume create r18_autobuild
+docker volume create r18_build
+docker volume create r19_output
+```
+
 2. **Download and install the image**
 
 ```shell
 docker pull nathhad/rooter19076:latest
+```
+
+**18.06.7**
+
+```shell
+docker pull nathhad/rooter18067:latest
 ```
 
 3. **Download the Git**
@@ -66,8 +98,17 @@ you download at least part.
 
 The easy way, the whole thing (you can change the last bit to change the destination of the download):
 
+(for 19.07.6 only)
+
 ```bash
-git clone --depth 1 --branch main --single-branch https://github.com/nathhad/docker-rooter19076 ~/docker-rooter19076
+git clone --depth 1 --branch main --single-branch https://github.com/nathhad/docker-rooterbuilder ~/docker-rooterbuilder
+```
+
+(for other branches, clone the whole git as follows)
+
+
+```bash
+git clone https://github.com/nathhad/docker-rooterbuilder ~/docker-rooterbuilder
 ```
 
 The minimum recommended component for this quick startup is the quick start script, which you can
