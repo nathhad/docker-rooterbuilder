@@ -1,8 +1,11 @@
 # ROOter Builder (Docker)
 
-This is a containerized build environment for ROOter GoldenOrb based on
-OpenWRT release 19.07.6. At the time of this writing, this is the
-primary build environment for ROOter, and covers 125 router models.
+This is a set of containerized build environments for ROOter GoldenOrb based on
+OpenWRT release 19.07.6. At the time of this writing, 19.07.6 is the
+primary build environment for ROOter, covers 125 router models, and is
+fully supported here. The 18.06.7 build container is under active
+development, only covers one standard model, and should be considered
+experimental at this time.
 
 This container also includes the [nathhad/autobuilder](https://github.com/nathhad/autobuilder)
 wrapper script system. It is meant to be a main building block to
@@ -10,17 +13,19 @@ construct and deploy ROOter autobuild servers, but also provides
 full support for building custom images, including all of the usual
 custom image abilities supported by the ROOter build environment.
 
-## Versions/Branches
+## Versions
 
-This git covers building different ROOter build environments in different branches:
+This git covers building different ROOter build environments. The files
+needed for creating a build environment image from scratch are located
+in a subfolder for each build environment:
 
-- **main**: 19.07.6 (the primary ROOter build environment)
-- **18067**: 18.06.7 (supports several older routers)
+- **19076**: 19.07.6 (the primary ROOter build environment, 125+ routers, fully supported)
+- **18067**: 18.06.7 (supports one older router, container in development)
 
 At this time the 18067 build environment is in testing.
 
 The instructions here are primarily for 19.07.6; some file names may
-change for the other build branches, but an effort has been made to
+change for the other build containers, but an effort has been made to
 point the changes out when possible.
 
 ## Relevant Links:
@@ -52,77 +57,74 @@ down to the heading that reads, "Change Docker storage location: THE RIGHT WAY!"
 
 If you've got your storage straight, you're ready to set up the image.
 
-1. **Set up storage volumes**
+1. **Download this Git**
 
-Your storage volumes are the only persistent part of the image, the program part of the image starts
-clean every time you restart the container (reboot, etc). You need to create the volumes you will
-use for the container.
+The git has a few helpful scripts, and it is worth grabbing some or all of it. This quick setup assumes
+you download at least part (the latest snapshot). However, it is possible to get a working
+build environment using only the simple-up-xx.sh script for the particular build
+environment you want, or by following the manual directions given below. The simple-up
+scripts are the recommended and supported way to download and install the containers.
 
-```bash
-docker volume create r19_autobuild
-docker volume create r19_build
-docker volume create r19_output
-```
-
-Those three will hold your configuration files, your actual build environment, and the resulting output images.
-
-All versions of the build environment share the same output volume (which simplifies setting up a 
-shared autobuild server). However, the autobuild and build folders will need to be renamed
-accordingly for different build environment versions. The simple-up.sh expects the following
-file names for other build environments:
-
-**18.06.7**
-
-```bash
-docker volume create r18_autobuild
-docker volume create r18_build
-docker volume create r19_output
-```
-
-2. **Download and install the image**
-
-```shell
-docker pull nathhad/rooter19076:latest
-```
-
-**18.06.7**
-
-```shell
-docker pull nathhad/rooter18067:latest
-```
-
-3. **Download the Git**
-
-The git has a few helpful scripts, and is worth grabbing some or all of. This quick setup assumes
-you download at least part.
-
-The easy way, the whole thing (you can change the last bit to change the destination of the download):
-
-(for 19.07.6 only)
+The easy way, to get the whole git:
 
 ```bash
 git clone --depth 1 --branch main --single-branch https://github.com/nathhad/docker-rooterbuilder ~/docker-rooterbuilder
 ```
 
-(for other branches, clone the whole git as follows)
+The minimum recommended component for this quick startup is the quick start script for
+your desired build environment:
+[simple-up-19.sh](https://github.com/nathhad/docker-rooterbuilder/raw/main/simple-up-19.sh).
+[simple-up-18.sh](https://github.com/nathhad/docker-rooterbuilder/raw/main/simple-up-18.sh).
 
+If you download manually, you will either need to manually make sure your script copies have the
+execute permission set, or change your script command syntax when you run them.
+
+2. **Set up storage volumes**
+
+Your storage volumes are the only persistent part of the image, the program part of the image starts
+clean every time you restart the container (reboot, etc). You *no longer need to manually create* the volumes you will
+use for the container as long as you use the "simple-up" scripts from this git, but it is good to know
+their names for further steps. You may also choose to create them manually, as the
+scrpit will simply skip creation if it sees they are already there:
 
 ```bash
-git clone https://github.com/nathhad/docker-rooterbuilder ~/docker-rooterbuilder
+docker volume create r19_autobuild
+docker volume create r19_build
+docker volume create rb_output
 ```
 
-The minimum recommended component for this quick startup is the quick start script, which you can
-[download here](https://github.com/nathhad/docker-rooter19076/raw/main/simple-up.sh).
+Those three will hold your configuration files, your actual build environment, and the resulting output images.
+
+All versions of the build environment share the same output volume (which simplifies setting up a 
+shared autobuild server). However, the autobuild and build folders are renamed
+accordingly by the up scripts for different build environment versions.
+
+3. **Download and install the image**
+
+The simple-up scripts should pull the latest image for you if you do not already have
+it on your system. However, to manually pull an image:
+
+**19.07.6 (manual pull)**
+
+```shell
+docker pull nathhad/rooter19076:latest
+```
+
+**18.06.7 (manual pull)**
+
+```shell
+docker pull nathhad/rooter18067:latest
+```
 
 4. **Start the container**
 
 The first time you start the container, it will pull both the build environment and the autobuild
 wrapper setup down off of github. This will take several minutes at a minimum, so you will need
 to wait for that step to complete first. To first start the container, cd to the folder where
-you downloaded the startup script in step 3, and run:
+you downloaded the startup script in step 3, and run (for the 19 build environment):
 
 ```bash
-. simple-startup.sh
+. simple-up-19.sh
 ```
 
 To know when initial container setup is complete, you'll need to watch the output of the container
@@ -153,7 +155,7 @@ At this point setup is complete, and you are ready to build images.
 Most autobuild commands can be issued from inside or outside of the container. Building custom
 images must be done from the command line inside the container, because it requires a fair
 bit of interactive input. For this quick start guide, we will assume you will do all work
-from inside. Step into your running image with the following command:
+from inside. Step into your running image with the following command (example given for 19):
 
 ```bash
 docker exec -it r19build /bin/bash
@@ -536,3 +538,6 @@ the build process runs as root, which is, needless to say, less than ideal.
 is sadly lacking. I do aim to rectify this as quickly as possible.
 
 - Improved control from outside the container: w.i.p.
+
+- A multi-container management system (like abmanage) to simplify running
+all of the build environments together in a full autobuild server
