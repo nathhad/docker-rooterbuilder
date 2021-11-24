@@ -20,9 +20,10 @@ needed for creating a build environment image from scratch are located
 in a subfolder for each build environment:
 
 - **19076**: 19.07.6 (the primary ROOter build environment, 125+ routers, fully supported)
+- **2102**: 21.02 (the newest ROOter build environment, *very very experimental*)
 - **18067**: 18.06.7 (supports one older router, container in development)
 
-At this time the 18067 build environment is in testing.
+At this time the 2102 build environment is in very early testing.
 
 The instructions here are primarily for 19.07.6; some file names may
 change for the other build containers, but an effort has been made to
