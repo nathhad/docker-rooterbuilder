@@ -14,4 +14,6 @@ docker run -dit \
 --mount src=rb_output,dst=/build/output \
 --mount type=tmpfs,dst=/tmp/ \
 --restart unless-stopped \
+--env PUID=$(id -u) \
+--env PGID=$(id -g) \
 nathhad/rooter19076:latest
