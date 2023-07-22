@@ -17,7 +17,7 @@ if [ ! -f /build/autobuild/setupcomplete ] ; then
 	cd /build/rooter/rooter2203/
 	mkdir -p ./images
 	echo "Run dirclean for fresh build environment."
-	./make dirclean
+	make dirclean
 	echo "Dirclean complete."
 
 	# Download autobuild:
