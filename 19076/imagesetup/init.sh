@@ -4,6 +4,17 @@
 # If the image is fresh, the script will install
 # the autobuild system and the build environment.
 
+#
+# NEW SYSTEM VARIABLES
+#
+# These are the minimum variables to change to create a new build system docker image.
+
+GITSOURCE="https://github.com/ofmodemsandmen/RooterSource"
+SYSNAME="rooter19076"
+
+
+# Begin working script:
+
 echo "Starting container."
 
 if [ ! -f /build/autobuild/setupcomplete ] ; then
@@ -12,10 +23,15 @@ if [ ! -f /build/autobuild/setupcomplete ] ; then
 
 	cd /build/rooter/
 	echo "Cloning fresh rooter image."
-	git clone --depth 1 --branch main --single-branch https://github.com/ofmodemsandmen/RooterSource rooter19076
+	git clone --depth 1 --branch main --single-branch "$GITSOURCE" "$SYSNAME"
 	echo "Update build packages."
-	cd /build/rooter/rooter19076/
+	cd "/build/rooter/$SYSNAME/"
 	mkdir -p ./images
+	echo "Run dirclean for fresh build environment."
+	make dirclean
+	echo "Dirclean complete."
+	# Add host staging directory to the gitignore file:
+	echo 'staging_dir/host/*' >> "/build/rooter/$SYSNAME/.gitignore"
 
 	# Download autobuild:
 	echo "Downloading autobuild."

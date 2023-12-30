@@ -1,6 +1,6 @@
-FROM nathhad/rooterbase:11.7.01
+FROM nathhad/rooterbase:11.8.02
 LABEL maintainer="Chuck Sanders <nathhad@gmail.com>"
-LABEL version="11.7.01.b"
+LABEL version="11.8.02.a"
 
 RUN mkdir /build/init && \
 	echo "PATH=$PATH:/build/autobuild" >> /root/.bashrc && \

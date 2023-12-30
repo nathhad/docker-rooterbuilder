@@ -1,0 +1,2 @@
+As of 2023, this container is no longer being actively maintained. The build system itself is still available, and the last container build should continue to work indefinitely, and DM is still updating the build system. However, we're no longer running autobuilds on this system, so container builds aren't terribly helpful.
+
