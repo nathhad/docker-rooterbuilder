@@ -5,7 +5,7 @@
 #
 # These are the minimum variables to change to create a new build system docker image.
 SYSNAME="sourcebpir4"
-SYSDIR="/mnt/rbstor/rb_overflow"
+SYSDIR="/mnt/overflow"
 
 # Check that volumes exist; create if not
 if [ "$(docker volume ls | grep -c 'rb_output')" -ne "1" ] ; then docker volume create rb_output ; fi
