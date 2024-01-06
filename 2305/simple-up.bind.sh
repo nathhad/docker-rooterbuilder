@@ -4,7 +4,7 @@
 # NEW SYSTEM VARIABLES
 #
 # These are the minimum variables to change to create a new build system docker image.
-SYSNAME="2302"
+SYSNAME="2305"
 SYSDIR="/mnt/overflow"
 
 # Check that volumes exist; create if not
